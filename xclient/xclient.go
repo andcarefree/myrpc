@@ -2,7 +2,9 @@ package xclient
 
 import (
 	"context"
+	"errors"
 	"io"
+	"log"
 	"reflect"
 	"sync"
 
@@ -72,7 +74,10 @@ func (xc *XClient) Call(ctx context.Context, serviceMethod string, args, reply i
 func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, reply interface{}) error {
 	servers, err := xc.d.GetAll()
 	if err != nil {
-		return nil
+		return err
+	}
+	if len(servers) == 0 {
+		return errors.New("not any server! ")
 	}
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -90,10 +95,12 @@ func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, re
 			err := xc.call(ctx, rpcAddr, serviceMethod, args, clonedReply)
 			mu.Lock()
 			if err != nil && e == nil {
+				log.Printf("err or e not nil, must cancel.err is %s, e is %s\n", err.Error(), e.Error())
 				e = err
 				cancel()
 			}
 			if err == nil && !replyDone {
+				log.Println("broadcast done!" + reflect.ValueOf(clonedReply).Elem().String())
 				reflect.ValueOf(reply).Elem().Set(reflect.ValueOf(clonedReply).Elem())
 				replyDone = true
 			}
