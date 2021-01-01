@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
 	"reflect"
 	"sync"
 
@@ -95,12 +94,10 @@ func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, re
 			err := xc.call(ctx, rpcAddr, serviceMethod, args, clonedReply)
 			mu.Lock()
 			if err != nil && e == nil {
-				log.Printf("err or e not nil, must cancel.err is %s, e is %s\n", err.Error(), e.Error())
 				e = err
 				cancel()
 			}
 			if err == nil && !replyDone {
-				log.Println("broadcast done!" + reflect.ValueOf(clonedReply).Elem().String())
 				reflect.ValueOf(reply).Elem().Set(reflect.ValueOf(clonedReply).Elem())
 				replyDone = true
 			}

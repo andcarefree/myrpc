@@ -35,6 +35,9 @@ func NewMutiServerDiscovery(servers []string) *MutiServerDiscovery {
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	d.index = d.r.Intn(math.MaxInt32 - 1)
+	// if len(d.servers) == 0 {
+	// 	return d, errors.New("NewMutiServerDiscovery failed: d.servers is empty! \n")
+	// }
 	return d
 }
 
@@ -73,7 +76,7 @@ func (d *MutiServerDiscovery) Get(mode SelectMode) (string, error) {
 func (d *MutiServerDiscovery) GetAll() (servers []string, err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	servers = make([]string, len(servers))
+	servers = make([]string, len(d.servers), len(d.servers))
 	copy(servers, d.servers)
 	return servers, nil
 }

@@ -69,6 +69,9 @@ func call(addr1, addr2 string) {
 
 func broadcast(addr1, addr2 string) {
 	d := xclient.NewMutiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
+	// if err != nil {
+	// 	log.Printf("broadcast cancel: %s", err.Error())
+	// }
 	xc := xclient.NewXClient(d, xclient.RandomSelect, nil)
 	defer func() { _ = xc.Close() }()
 	var wg sync.WaitGroup
