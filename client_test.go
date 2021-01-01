@@ -75,36 +75,25 @@ func TestClient_Call(t *testing.T) {
 	})
 }
 
-//not success
+//the origin test hava a trouble
+//if net.Listen return error
+//after t.Fatal the channel named ch will not receive the anything
+//so i add `ch<-struct{}{}` before `t.fatal`
 func TestDial(t *testing.T) {
 	if runtime.GOOS == "linux" {
 		ch := make(chan struct{})
 		addr := "/tmp/myrpc.sock"
-		go func(t *testing.T) {
-			//t.Fatal("start!")
-			osError := os.Remove(addr)
-			//t.Fatal("remove!")
-			if osError != nil {
-				t.Fatal("find! " + osError.Error())
-			}
+		go func() {
+			_ = os.Remove(addr)
 			l, err := net.Listen("unix", addr)
-			t.Fatal("listen!")
 			if err != nil {
+				ch <- struct{}{}
 				t.Fatal("failed to listen unix socket")
 			}
 			ch <- struct{}{}
 			Accept(l)
-		}(t)
-		select {
-		case <-ch:
-			{
-
-			}
-		case <-time.After(time.Second * 5):
-			{
-				t.Fatal("remove tmp/myrpc.sock time out!")
-			}
-		}
+		}()
+		<-ch
 		_, err := XDial("unix@" + addr)
 		_assert(err == nil, "failed to connected unix socket")
 	}
