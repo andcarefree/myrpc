@@ -1,7 +1,10 @@
-package myrpc
+package registry
 
 import (
+	"log"
+	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -61,4 +64,29 @@ func (r *RPCRegistry) AliveServers() []string {
 	}
 	sort.Strings(alive)
 	return alive
+}
+
+//ServerHTTP is RPCRegistry's way to communicate with client and server
+//HTTP GET means AliveServers()
+//HTTP POST means PutServer()
+func (r *RPCRegistry) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case "GET":
+		w.Header().Set("X-rpc-Servers", strings.Join(r.AliveServers(), ", "))
+	case "POST":
+		addr := req.Header.Get("X-rpc-Server")
+		if addr == "" {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		r.PutServer(addr)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+//HandleHTTP()
+func (r *RPCRegistry) HandleHTTP(registryPath string) {
+	http.Handle(registryPath, r)
+	log.Println("rpc registry path: ", registryPath)
 }
