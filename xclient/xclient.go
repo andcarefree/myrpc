@@ -163,3 +163,17 @@ func (d *RegistryDiscovery) Refresh() error {
 	d.lastUpdate = time.Now()
 	return nil
 }
+
+func (d *RegistryDiscovery) Get(mode SelectMode) (string, error) {
+	if err := d.Refresh(); err != nil {
+		return "", err
+	}
+	return d.MutiServerDiscovery.Get(mode)
+}
+
+func (d *RegistryDiscovery) GetAll() ([]string, error) {
+	if err := d.Refresh(); err != nil {
+		return nil, err
+	}
+	return d.MutiServerDiscovery.GetAll()
+}
