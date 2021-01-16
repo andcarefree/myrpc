@@ -16,7 +16,7 @@ const (
 )
 
 type Discovery interface {
-	Refersh() error
+	Refresh() error
 	Update(servers []string) error
 	Get(mode SelectMode) (string, error)
 	GetAll() ([]string, error)
@@ -35,7 +35,7 @@ func NewMutiServerDiscovery(servers []string) *MutiServerDiscovery {
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	d.index = d.r.Intn(math.MaxInt32 - 1)
-	// if len(d.servers) == 0 {
+	// if len(d.servers) == 0 {@
 	// 	return d, errors.New("NewMutiServerDiscovery failed: d.servers is empty! \n")
 	// }
 	return d
@@ -43,7 +43,7 @@ func NewMutiServerDiscovery(servers []string) *MutiServerDiscovery {
 
 var _ Discovery = (*MutiServerDiscovery)(nil)
 
-func (d *MutiServerDiscovery) Refersh() error {
+func (d *MutiServerDiscovery) Refresh() error {
 	return nil
 }
 
