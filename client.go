@@ -249,13 +249,21 @@ func (client *Client) Go(serviceMethod string, args, reply interface{}, done cha
 
 //Call is block
 func (client *Client) Call(ctx context.Context, serviceMethod string, args, reply interface{}) error {
+	// i := reflect.ValueOf(args).Elem().Field(0).Int()
+	// log.Printf("enter client call %d", i)
+	//!!! before this is correted
 	call := client.Go(serviceMethod, args, reply, make(chan *Call, 1))
+	//blocked in here
+	//maybe deadlock in ctx?
 	select {
 	case <-ctx.Done():
 		client.removeCall(call.Seq)
 		return errors.New("rpc client: call failed: " + ctx.Err().Error())
 	case call := <-call.Done:
 		return call.Error
+	//test blocked
+	case <-time.After(time.Second * 5):
+		return errors.New("client.go timeout!!! ")
 	}
 }
 
