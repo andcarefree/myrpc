@@ -4,8 +4,12 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log"
+	"net/http"
 	"reflect"
+	"strings"
 	"sync"
+	"time"
 
 	. "github.com/myrepo/myrpc"
 )
@@ -106,4 +110,56 @@ func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, re
 	}
 	wg.Wait()
 	return e
+}
+
+type RegistryDiscovery struct {
+	*MutiServerDiscovery
+	rigestry   string
+	timeout    time.Duration
+	lastUpdate time.Time
+}
+
+const defaultUpdateTimeout = time.Second * 10
+
+func NewRegistryDiscovery(rigistryAddr string, timeout time.Duration) *RegistryDiscovery {
+	if timeout == 0 {
+		timeout = defaultUpdateTimeout
+	}
+	d := &RegistryDiscovery{
+		MutiServerDiscovery: NewMutiServerDiscovery(make([]string, 0)),
+		rigestry:            rigistryAddr,
+		timeout:             timeout,
+	}
+	return d
+}
+
+func (d *RegistryDiscovery) Update(servers []string) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.servers = servers
+	d.lastUpdate = time.Now()
+	return nil
+}
+
+func (d *RegistryDiscovery) Refresh() error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.lastUpdate.Add(d.timeout).After(time.Now()) {
+		return nil
+	}
+	log.Println("rpc registry: refresh servers from registry", d.rigestry)
+	resp, err := http.Get(d.rigestry)
+	if err != nil {
+		log.Println("rpc registry refresh error: ", err)
+		return err
+	}
+	servers := strings.Split(resp.Header.Get("X-rpc-Servers"), ",")
+	d.servers = make([]string, 0, len(servers))
+	for _, server := range servers {
+		if strings.TrimSpace(server) != "" {
+			d.servers = append(d.servers, strings.TrimSpace(server))
+		}
+	}
+	d.lastUpdate = time.Now()
+	return nil
 }
