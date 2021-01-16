@@ -85,8 +85,40 @@ func (r *RPCRegistry) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-//HandleHTTP()
+//HandleHTTP means privide HTTP server
 func (r *RPCRegistry) HandleHTTP(registryPath string) {
 	http.Handle(registryPath, r)
 	log.Println("rpc registry path: ", registryPath)
+}
+
+//HandleHTTP privide default server in "_myrpc_ registry"
+func HandleHTTP() {
+	DefaultRegistry.HandleHTTP(defaultPath)
+}
+
+func Heartbeat(registry, addr string, duration time.Duration) {
+	if duration == 0 {
+		duration = defaultTimeout - time.Duration(1)*time.Minute
+	}
+	var err error
+	err = sendHeartbeat(registry, addr)
+	go func() {
+		t := time.NewTicker(duration)
+		for err == nil {
+			<-t.C
+			err = sendHeartbeat(registry, addr)
+		}
+	}()
+}
+
+func sendHeartbeat(registry, addr string) error {
+	log.Println(addr, "send heart beat to registry", registry)
+	httpClient := &http.Client{}
+	req, _ := http.NewRequest("POST", registry, nil)
+	req.Header.Set("X-rpc-Server", addr)
+	if _, err := httpClient.Do(req); err != nil {
+		log.Println("rpc server: heart beat err: ", err)
+		return err
+	}
+	return nil
 }
