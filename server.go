@@ -266,7 +266,6 @@ func newService(rcvr interface{}) *service {
 }
 
 func (s *service) registerMethods() {
-	//once call method?
 	s.method = make(map[string]*methodType)
 	for i := 0; i < s.typ.NumMethod(); i++ {
 		method := s.typ.Method(i)
@@ -278,7 +277,7 @@ func (s *service) registerMethods() {
 			continue
 		}
 		argType, replyType := mType.In(1), mType.In(2)
-		if !isExportedOrBuildinType(argType) || !isExportedOrBuildinType(replyType) {
+		if !isExportedOrBuiltinType(argType) || !isExportedOrBuiltinType(replyType) {
 			continue
 		}
 		s.method[method.Name] = &methodType{
@@ -290,7 +289,7 @@ func (s *service) registerMethods() {
 	}
 }
 
-func isExportedOrBuildinType(t reflect.Type) bool {
+func isExportedOrBuiltinType(t reflect.Type) bool {
 	return ast.IsExported(t.Name()) || t.PkgPath() == ""
 }
 

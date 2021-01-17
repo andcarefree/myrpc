@@ -63,15 +63,17 @@ func TestClient_Call(t *testing.T) {
 		ctx, _ := context.WithTimeout(context.Background(), time.Second)
 		var reply int
 		err := client.Call(ctx, "Bar.Timeout", 1, &reply)
-		_assert(err != nil && strings.Contains(err.Error(), ctx.Err().Error()), "expect a client timeout error")
+		_assert(err != nil && strings.Contains(err.Error(), ctx.Err().Error()), "expect a timeout error")
 	})
+	//something happened
+	//in server, something happened cause server close?
 	t.Run("server handle timeout", func(t *testing.T) {
 		client, _ := Dial("tcp", addr, &Option{
 			HandleTimeout: time.Second,
 		})
 		var reply int
 		err := client.Call(context.Background(), "Bar.Timeout", 1, &reply)
-		_assert(err != nil && strings.Contains(err.Error(), "handle timeout"), "expect a handle timeout error")
+		_assert(err != nil && strings.Contains(err.Error(), "handle timeout"), "expect a timeout error")
 	})
 }
 
