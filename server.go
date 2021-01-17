@@ -63,7 +63,7 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 		return
 	}
 	if opt.MagicNumber != MagicNumber {
-		log.Printf("rpc server: invalid magic number %X\n", opt.MagicNumber)
+		log.Printf("rpc server: invalid magic number %x\n", opt.MagicNumber)
 		return
 	}
 	f := codec.NewCodecFuncMap[opt.CodecType]

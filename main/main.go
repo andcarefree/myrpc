@@ -55,7 +55,6 @@ func call(addr1, addr2 string) {
 	d := xclient.NewMutiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
 	xc := xclient.NewXClient(d, xclient.RandomSelect, nil)
 	defer func() { _ = xc.Close() }()
-	// send request & receive response
 	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
@@ -69,9 +68,6 @@ func call(addr1, addr2 string) {
 
 func broadcast(addr1, addr2 string) {
 	d := xclient.NewMutiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
-	// if err != nil {
-	// 	log.Printf("broadcast cancel: %s", err.Error())
-	// }
 	xc := xclient.NewXClient(d, xclient.RandomSelect, nil)
 	defer func() { _ = xc.Close() }()
 	var wg sync.WaitGroup
@@ -80,7 +76,6 @@ func broadcast(addr1, addr2 string) {
 		go func(i int) {
 			defer wg.Done()
 			foo(context.Background(), xc, "broadcast", "Foo.Sum", &Args{Num1: i, Num2: i * i})
-			// expect 2 - 5 timeout
 			ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
 			foo(ctx, xc, "broadcast", "Foo.Sleep", &Args{Num1: i, Num2: i * i})
 		}(i)

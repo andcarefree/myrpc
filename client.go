@@ -195,17 +195,17 @@ type clientResult struct {
 type newClientFunc func(conn net.Conn, opt *Option) (client *Client, err error)
 
 //Dial ensure option and creat coon
-func dialTimeout(f newClientFunc, newWork, address string, opts ...*Option) (client *Client, err error) {
+func dialTimeout(f newClientFunc, netWork, address string, opts ...*Option) (client *Client, err error) {
 	opt, err := parseOptions(opts...)
 	if err != nil {
 		return nil, err
 	}
-	conn, err := net.Dial(newWork, address)
+	conn, err := net.DialTimeout(netWork, address, opt.ConnecTimeout)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		if client == nil {
+		if err != nil {
 			_ = conn.Close()
 		}
 	}()
@@ -249,12 +249,7 @@ func (client *Client) Go(serviceMethod string, args, reply interface{}, done cha
 
 //Call is block
 func (client *Client) Call(ctx context.Context, serviceMethod string, args, reply interface{}) error {
-	// i := reflect.ValueOf(args).Elem().Field(0).Int()
-	// log.Printf("enter client call %d", i)
-	//!!! before this is correted
 	call := client.Go(serviceMethod, args, reply, make(chan *Call, 1))
-	//blocked in here
-	//maybe deadlock in ctx?
 	select {
 	case <-ctx.Done():
 		client.removeCall(call.Seq)
