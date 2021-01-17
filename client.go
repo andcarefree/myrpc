@@ -256,9 +256,6 @@ func (client *Client) Call(ctx context.Context, serviceMethod string, args, repl
 		return errors.New("rpc client: call failed: " + ctx.Err().Error())
 	case call := <-call.Done:
 		return call.Error
-	//test blocked
-	case <-time.After(time.Second * 5):
-		return errors.New("client.go timeout!!! ")
 	}
 }
 
