@@ -32,8 +32,11 @@ func (xc *XClient) Close() error {
 	xc.mu.Lock()
 	defer xc.mu.Unlock()
 	for key, client := range xc.clients {
-		_ = client.Close()
+		err := client.Close()
 		delete(xc.clients, key)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -65,7 +68,6 @@ func (xc *XClient) call(ctx context.Context, rpcAddr string, serviceMethod strin
 	}
 	return client.Call(ctx, serviceMethod, args, reply)
 }
-
 func (xc *XClient) Call(ctx context.Context, serviceMethod string, args, reply interface{}) error {
 	rpcAddr, err := xc.d.Get(xc.mode)
 	if err != nil {

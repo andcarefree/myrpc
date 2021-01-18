@@ -54,7 +54,12 @@ func foo(ctx context.Context, xc *xclient.XClient, typ, serviceMethod string, ar
 func call(addr1, addr2 string) {
 	d := xclient.NewMutiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
 	xc := xclient.NewXClient(d, xclient.RandomSelect, nil)
-	defer func() { _ = xc.Close() }()
+	defer func() {
+		err := xc.Close()
+		if err != nil {
+			log.Printf("client: close error: %s", err.Error())
+		}
+	}()
 	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
@@ -69,7 +74,12 @@ func call(addr1, addr2 string) {
 func broadcast(addr1, addr2 string) {
 	d := xclient.NewMutiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
 	xc := xclient.NewXClient(d, xclient.RandomSelect, nil)
-	defer func() { _ = xc.Close() }()
+	defer func() {
+		err := xc.Close()
+		if err != nil {
+			log.Printf("client: close error: %s", err.Error())
+		}
+	}()
 	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
@@ -96,5 +106,6 @@ func main() {
 
 	time.Sleep(time.Second)
 	call(addr1, addr2)
-	broadcast(addr1, addr2)
+	// time.Sleep(time.Second)
+	// broadcast(addr1, addr2)
 }

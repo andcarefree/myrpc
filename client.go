@@ -28,6 +28,7 @@ type Call struct {
 }
 
 func (call *Call) done() {
+	log.Println("call done!!!")
 	call.Done <- call
 }
 
@@ -67,6 +68,7 @@ func (client *Client) IsAvailable() bool {
 }
 
 func (client *Client) registerCall(call *Call) (uint64, error) {
+	//log.Println("enter client.registerCall")
 	client.mu.Lock()
 	defer client.mu.Unlock()
 	if client.closeing || client.shutdown {
@@ -79,6 +81,7 @@ func (client *Client) registerCall(call *Call) (uint64, error) {
 }
 
 func (client *Client) removeCall(seq uint64) *Call {
+	log.Println("enter client.removeCall")
 	client.mu.Lock()
 	defer client.mu.Unlock()
 	call := client.pending[seq]
@@ -125,6 +128,7 @@ func (client *Client) receive() {
 }
 
 func (client *Client) send(call *Call) {
+	//log.Println("enter client.send")
 	client.sending.Lock()
 	defer client.sending.Unlock()
 	seq, err := client.registerCall(call)
@@ -136,12 +140,16 @@ func (client *Client) send(call *Call) {
 	client.header.ServiceMethod = call.ServiceMethod
 	client.header.Seq = seq
 	client.header.Error = ""
-	if err := client.cc.Write(&client.header, call.Args); err != nil {
+	err = client.cc.Write(&client.header, call.Args)
+	if err != nil {
 		call := client.removeCall(seq)
 		if call != nil {
 			call.Error = err
 			call.done()
+		} else {
 		}
+	} else {
+		log.Printf("in client.send error is nil\n")
 	}
 }
 
