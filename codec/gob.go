@@ -36,8 +36,9 @@ func (c *GobCodec) ReadBody(body interface{}) error {
 
 func (c *GobCodec) Write(h *Header, body interface{}) (err error) {
 	defer func() {
-		_ = c.buf.Flush()
+		flushErr := c.buf.Flush()
 		if err != nil {
+			log.Println("rpc codec: gob error write:", flushErr)
 			_ = c.Close()
 		}
 	}()
