@@ -101,9 +101,14 @@ func (client *Client) terminateCalls(err error) {
 }
 
 func (client *Client) receive() {
+	// log.Println("enter receive")
+	// defer func() {
+	// 	log.Println("receive return")
+	// }()
 	var err error
 	for err == nil {
 		var h codec.Header
+		//ReadHeader blocker, maybe client.cc.conn is nil
 		if err = client.cc.ReadHeader(&h); err != nil {
 			break
 		}
@@ -130,6 +135,9 @@ func (client *Client) send(call *Call) {
 	//log.Println("enter client.send")
 	client.sending.Lock()
 	defer client.sending.Unlock()
+	// defer func() {
+	// 	log.Println("send return")
+	// }()
 	seq, err := client.registerCall(call)
 	if err != nil {
 		call.Error = err
