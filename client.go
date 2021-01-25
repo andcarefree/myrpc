@@ -28,7 +28,6 @@ type Call struct {
 }
 
 func (call *Call) done() {
-	log.Println("call done!!!")
 	call.Done <- call
 }
 
@@ -81,7 +80,7 @@ func (client *Client) registerCall(call *Call) (uint64, error) {
 }
 
 func (client *Client) removeCall(seq uint64) *Call {
-	log.Println("enter client.removeCall")
+	//log.Println("enter client.removeCall")
 	client.mu.Lock()
 	defer client.mu.Unlock()
 	call := client.pending[seq]
@@ -146,10 +145,7 @@ func (client *Client) send(call *Call) {
 		if call != nil {
 			call.Error = err
 			call.done()
-		} else {
 		}
-	} else {
-		log.Printf("in client.send error is nil\n")
 	}
 }
 

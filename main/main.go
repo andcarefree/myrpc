@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/myrepo/myrpc/codec"
+
 	"github.com/myrepo/myrpc"
 	"github.com/myrepo/myrpc/xclient"
 )
@@ -52,8 +54,14 @@ func foo(ctx context.Context, xc *xclient.XClient, typ, serviceMethod string, ar
 }
 
 func call(addr1, addr2 string) {
+	opt := &myrpc.Option{
+		MagicNumber:   0x3bef5c,
+		CodecType:     codec.JsonType,
+		ConnecTimeout: time.Second * 3,
+		HandleTimeout: time.Second * 3,
+	}
 	d := xclient.NewMutiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
-	xc := xclient.NewXClient(d, xclient.RandomSelect, nil)
+	xc := xclient.NewXClient(d, xclient.RandomSelect, opt)
 	defer func() {
 		err := xc.Close()
 		if err != nil {
