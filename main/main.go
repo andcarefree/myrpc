@@ -114,6 +114,6 @@ func main() {
 
 	time.Sleep(time.Second)
 	call(addr1, addr2)
-	// time.Sleep(time.Second)
+	time.Sleep(time.Second * 2)
 	// broadcast(addr1, addr2)
 }
