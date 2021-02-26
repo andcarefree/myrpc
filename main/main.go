@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"math/rand"
 	"net"
 	"sync"
 	"time"
@@ -11,6 +12,15 @@ import (
 
 	"github.com/myrepo/myrpc"
 	"github.com/myrepo/myrpc/xclient"
+)
+
+const (
+	endpoints1 string = "localhost:12380"
+	endpoints2 string = "localhost:22380"
+	endpoints3 string = "localhost:32380"
+	lease1     int64  = 1
+	lease2     int64  = 2
+	lease3     int64  = 3
 )
 
 type Foo int
@@ -28,12 +38,18 @@ func (f Foo) Sleep(args Args, reply *int) error {
 	return nil
 }
 
-func startServer(addrCh chan string) {
+func startServer(lease int64) {
 	var foo Foo
 	l, _ := net.Listen("tcp", ":0")
 	server := myrpc.NewServer()
 	_ = server.Regsiter(&foo)
-	addrCh <- l.Addr().String()
+	rand.Seed(int64(time.Now().UnixNano()))
+	a := rand.Intn(1000)
+	register, err := myrpc.NewServiceRegister([]string{endpoints1, endpoints2, endpoints3}, "/Foo/"+string(a), l.Addr().String(), lease)
+	if err != nil {
+		log.Fatalln("rigister to endpoints error: ", err)
+	}
+	go register.ListenLeaseRespChan()
 	server.Accept(l)
 }
 
@@ -55,10 +71,10 @@ func foo(ctx context.Context, xc *xclient.XClient, typ, serviceMethod string, ar
 
 func call(addr1, addr2 string) {
 	opt := &myrpc.Option{
-		MagicNumber:   0x3bef5c,
-		CodecType:     codec.JsonType,
-		ConnecTimeout: time.Second * 3,
-		HandleTimeout: time.Second * 3,
+		MagicNumber: 0x3bef5c,
+		CodecType:   codec.JsonType,
+		//ConnecTimeout: time.Second * 3,
+		//HandleTimeout: time.Second * 3,
 	}
 	d := xclient.NewMutiServerDiscovery([]string{"tcp@" + addr1, "tcp@" + addr2})
 	xc := xclient.NewXClient(d, xclient.RandomSelect, opt)
@@ -103,17 +119,13 @@ func broadcast(addr1, addr2 string) {
 
 func main() {
 	log.SetFlags(0)
-	ch1 := make(chan string)
-	ch2 := make(chan string)
-	// start two servers
-	go startServer(ch1)
-	go startServer(ch2)
 
-	addr1 := <-ch1
-	addr2 := <-ch2
+	//start three server points
+	go startServer(lease1)
+	go startServer(lease2)
+	go startServer(lease3)
 
-	time.Sleep(time.Second)
-	call(addr1, addr2)
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Minute * 5)
+	// call(addr1, addr2)
 	// broadcast(addr1, addr2)
 }
